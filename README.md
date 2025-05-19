@@ -75,9 +75,85 @@ Content-Type: application/json
 GET /api/audio/speech_20240321_123456.mp3
 ```
 
+## 前端构建部署
+
+### 安装前端依赖
+```bash
+cd web
+npm install
+```
+
+### 开发模式运行
+```bash
+npm run dev
+```
+
+### 构建生产版本
+```bash
+npm run build
+```
+
+## Docker 部署
+
+### 构建 Docker 镜像
+```bash
+docker build -t azure-tts-service .
+```
+
+### 运行 Docker 容器
+```bash
+docker run -d \
+  -p 5000:5000 \
+  -e AZURE_TTS_KEY="您的密钥" \
+  -e AZURE_TTS_REGION="您的区域" \
+  -e AZURE_TTS_VOICE="zh-CN-XiaoxiaoNeural" \
+  -v $(pwd)/audio_output:/app/audio_output \
+  --name azure-tts \
+  azure-tts-service
+```
+
+### 环境变量说明
+
+| 环境变量 | 说明 | 默认值 |
+|---------|------|--------|
+| AZURE_TTS_KEY | Azure TTS 服务密钥 | - |
+| AZURE_TTS_REGION | Azure 服务区域 | - |
+| AZURE_TTS_VOICE | 语音合成声音 | zh-CN-XiaoxiaoNeural |
+| AUDIO_OUTPUT_DIR | 音频输出目录 | audio_output |
+| SERVER_HOST | 服务器主机地址 | 0.0.0.0 |
+| SERVER_PORT | 服务器端口 | 5000 |
+| FLASK_DEBUG | 调试模式 | false |
+
+### Docker Compose 部署
+
+创建 `docker-compose.yml` 文件：
+
+```yaml
+version: '3'
+services:
+  azure-tts:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      - AZURE_TTS_KEY=您的密钥
+      - AZURE_TTS_REGION=您的区域
+      - AZURE_TTS_VOICE=zh-CN-XiaoxiaoNeural
+    volumes:
+      - ./audio_output:/app/audio_output
+```
+
+使用 Docker Compose 启动服务：
+
+```bash
+docker-compose up -d
+```
+
 ## 注意事项
 
 - 确保有足够的磁盘空间存储生成的音频文件
 - 建议定期清理 `generated_audio` 目录中的旧文件
 - 请妥善保管您的 Azure 密钥
-- 修改配置后需要重启服务才能生效 
+- 修改配置后需要重启服务才能生效
+- 使用 Docker 部署时，请确保正确设置环境变量
+- 生产环境部署时建议关闭调试模式 
